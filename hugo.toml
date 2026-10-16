@@ -1,0 +1,18 @@
+baseURL = "https://example.pages.dev/"
+languageCode = "zh-CN"
+title = "C++ 学习资源"
+theme = "hugo-theme-stack"
+
+[params]
+  mainSections = ["cpp"]
+  [params.sidebar]
+    emoji = "🧠"
+    subtitle = "给同学整理的 C++ 链接"
+  [params.article]
+    math = false
+    toc = false
+
+[markup]
+  [markup.highlight]
+    style = "dracula"
+    lineNos = true
