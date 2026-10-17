@@ -1,0 +1,28 @@
+/* 全局字体 */
+:root {
+    --base-font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --code-font-family: "JetBrains Mono", "Fira Code", Consolas, monospace;
+}
+
+/* 🔥 暴力消除代码块的独立背景色，让它透明 */
+.article-content pre,
+.article-content code,
+.article-content .highlight,
+.article-content .highlight > .chroma,
+.article-content pre.chroma {
+    background-color: transparent !important;
+}
+
+/* 为了让代码块有一点边界感，给它加个非常微弱的底色和圆角（如果你连这点底色都不想要，可以把 background-color 改成 transparent） */
+.article-content .highlight {
+    background-color: rgba(0, 0, 0, 0.15) !important; /* 微微压暗一点点，完美融合背景 */
+    border-radius: 8px !important; 
+    padding: 1rem !important;
+    border: 1px solid rgba(255, 255, 255, 0.05); /* 加个极细的边框，显得更精致 */
+}
+
+/* 行号颜色调柔和 */
+.article-content .highlight .lnt,
+.article-content .highlight .ln {
+    color: #7a7a7a !important;
+}
