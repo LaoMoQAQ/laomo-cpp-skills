@@ -1,49 +1,222 @@
-/* 引入超好看的 Google 官方代码字体 */
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&display=swap');
-
-/* 全局字体 */
-:root {
-    --base-font-family: "PingFang SC", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    --code-font-family: "JetBrains Mono", Consolas, monospace !important;
+/* ==========================================================================
+   1. 字体：JetBrains Mono 自托管（static/fonts/）
+   --------------------------------------------------------------------------
+   原来用 @import url(fonts.googleapis.com) 有两个问题：
+     · @import 必须出现在 CSS 最前面，Sass 会把它塞进打包结果的开头，
+       导致后面的样式全部“晚一步”生效，容易出现闪烁/被覆盖；
+     · 国内访问 fonts.googleapis.com 基本超时，代码块会先回退到
+       Consolas，等字体到了再跳一次（FOUC）。
+   改成 @font-face + 本地文件，无外链、无跳字。
+   ========================================================================== */
+@font-face {
+    font-family: "JetBrains Mono";
+    font-style: normal;
+    font-weight: 400;
+    font-display: swap;
+    src: url("/fonts/jetbrains-mono-latin-400.woff2") format("woff2");
 }
 
-/* 🔥 彻底扒掉代码框的所有底色 */
+@font-face {
+    font-family: "JetBrains Mono";
+    font-style: normal;
+    font-weight: 700;
+    font-display: swap;
+    src: url("/fonts/jetbrains-mono-latin-700.woff2") format("woff2");
+}
+
+/* ==========================================================================
+   2. 全局字体变量
+   --------------------------------------------------------------------------
+   注意：不要在变量里写 !important，它会被原样输出到自定义属性里，
+   变成无效声明，导致整条 --code-font-family 失效。
+   ========================================================================== */
+:root {
+    --sys-font-family: "PingFang SC", "Microsoft YaHei", "Noto Sans SC",
+        -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --base-font-family: var(--sys-font-family);
+    --code-font-family: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
+
+    /* 代码块统一字号：给 .highlight 定一个基准，里面全部用 em 继承，
+       避免 pre / code / .lnt 一层层 0.9em 叠下去（原来会叠到 10px）。 */
+    --code-font-size: 1.45rem;
+}
+
+/* ==========================================================================
+   3. 代码块：去掉生硬底色，与卡片融合
+   ========================================================================== */
 .article-content pre,
 .article-content code,
 .article-content .highlight,
 .article-content .highlight > .chroma,
 .article-content pre.chroma,
 .article-content .highlight table {
-    background-color: transparent !important; /* 强制透明 */
-    border: none !important; /* 去掉所有边框 */
+    background-color: transparent !important;
+    border: none !important;
 }
 
-/* 🔥 强制把所有代码换为好看的字体 */
-.article-content code,
-.article-content pre,
-.article-content .highlight,
-.article-content .highlight > .chroma,
-.article-content pre.chroma {
-    font-family: "JetBrains Mono", Consolas, monospace !important;
-    font-size: 0.9em !important; /* 字体稍微调小一点，显得更精致 */
-    line-height: 1.6 !important;
-}
-
-/* 为了防止代码框和文字混在一起，只给它加个非常轻微的左侧竖线作为边界（像现在很多极简博客那样） */
+/* 字号只在这一层设，子孙全部继承 */
 .article-content .highlight {
-    border-left: 3px solid rgba(255, 255, 255, 0.15) !important;
-    padding-left: 1rem !important;
+    font-family: var(--code-font-family) !important;
+    font-size: var(--code-font-size) !important;
+    line-height: 1.7 !important;
+    /* 主题默认给 .highlight 加了负边距 + 加宽，把代码块顶到卡片边缘。
+       底色去掉后不需要贴边了，这里把负边距和宽度一起复位，
+       否则代码块会比正文宽 2×card-padding，右侧溢出被卡片裁掉。 */
     margin: 1.5rem 0 !important;
+    width: auto !important;
+    max-width: 100%;
+    padding: 0 0 0 1rem !important;
+    border-left: 3px solid rgba(255, 255, 255, 0.15) !important;
+    border-radius: 0 !important;
+    overflow-x: auto;
+}
+
+.article-content .highlight pre,
+.article-content .highlight code,
+.article-content .highlight .lnt,
+.article-content .highlight .ln,
+.article-content .highlight .line,
+.article-content .highlight .cl,
+.article-content .highlight table,
+.article-content .highlight td {
+    font-family: inherit !important;
+    font-size: 1em !important;
+    line-height: inherit !important;
+}
+
+/* 行内 code（正文里的 `xxx`）——它和代码块共用 .article-content code 选择器，
+   但代码块里的 code 已被上面重置成透明，这里只负责行内样式。 */
+.article-content > p code,
+.article-content > ul code,
+.article-content > ol code,
+.article-content > table code,
+.article-content > blockquote code {
+    background-color: rgba(127, 127, 127, 0.12) !important;
+    padding: 0.15em 0.35em;
+    border-radius: 4px;
+    font-size: 0.9em !important;
+    white-space: nowrap;
+}
+
+/* 行号：调暗、不抢戏，并固定在左侧不随横向滚动跑掉 */
+.article-content .highlight .lnt,
+.article-content .highlight .ln {
+    color: #8b8b8b !important;
+    padding-right: 1.25rem !important;
+    user-select: none;
 }
 
 /* 亮色模式下左侧竖线换色 */
 [data-scheme="light"] .article-content .highlight {
-    border-left: 3px solid rgba(0, 0, 0, 0.1) !important;
+    border-left-color: rgba(0, 0, 0, 0.12) !important;
 }
 
-/* 行号颜色调暗，不要抢戏 */
-.article-content .highlight .lnt,
-.article-content .highlight .ln {
-    color: #666 !important;
-    margin-right: 1rem !important;
+/* 复制按钮：主题默认 opacity:0，只能靠 hover 出现，手机上永远点不到。
+   改成常驻但低透明度，hover 时变清晰。 */
+.article-content .highlight .copyCodeButton {
+    opacity: 0.45;
+    top: 0.5rem;
+    right: 0.5rem;
+    font-family: var(--base-font-family);
+    font-size: 1.2rem;
+    padding: 0.4rem 0.8rem;
+}
+
+.article-content .highlight:hover .copyCodeButton,
+.article-content .highlight .copyCodeButton:focus-visible {
+    opacity: 1;
+}
+
+/* ==========================================================================
+   4. 正文排版：字号、行距、留白
+   ========================================================================== */
+:root {
+    --article-font-size: 1.65rem;   /* 16.5px，中文正文比较舒服的档位 */
+    --article-line-height: 1.9;     /* 中文行距要比英文松一点 */
+}
+
+@media (min-width: 768px) {
+    :root {
+        --article-font-size: 1.75rem; /* 17.5px */
+    }
+}
+
+.article-content {
+    /* 长英文/长链接不撑破卡片 */
+    overflow-wrap: break-word;
+}
+
+.article-content > p {
+    margin: 1.15em 0; /* 原来 1.5em，配合更大的行距显得太散 */
+}
+
+/* 标题：收紧上间距，拉开下间距，层级更清楚 */
+.article-content h2 {
+    margin-top: 2.4em;
+    margin-bottom: 0.8em;
+    padding-bottom: 0.35em;
+}
+
+.article-content h3 {
+    margin-top: 1.9em;
+    margin-bottom: 0.6em;
+}
+
+/* 段落紧跟标题时不要再叠加一个大 margin */
+.article-content h2 + p,
+.article-content h3 + p,
+.article-content h2 + .highlight,
+.article-content h3 + .highlight {
+    margin-top: 0.6em !important;
+}
+
+/* 分割线：默认 100px 宽的小横杠，改成细长淡线，章节分隔更自然 */
+.article-content hr {
+    width: 100%;
+    height: 1px;
+    margin: 3rem 0;
+    border: 0;
+    background: var(--card-separator-color);
+    opacity: 1;
+}
+
+/* ==========================================================================
+   5. 列表：中文列表默认缩进偏窄，行距偏紧
+   ========================================================================== */
+.article-content ul,
+.article-content ol {
+    padding-left: 1.6em;
+}
+
+.article-content li {
+    margin: 0.35em 0;
+}
+
+.article-content li > p {
+    margin: 0.35em 0;
+}
+
+/* ==========================================================================
+   6. 表格：小屏幕上允许横向滚动，不要挤成一团
+   --------------------------------------------------------------------------
+   注意选择器必须排除 .highlight 里面的行号表，否则会把代码块的
+   lntable 也当成正文表格处理，字号再被 0.92em 缩一次。
+   ========================================================================== */
+.article-content > .table-wrapper table,
+.article-content > table {
+    font-size: 0.92em;
+}
+
+.article-content > .table-wrapper th,
+.article-content > .table-wrapper td,
+.article-content > table th,
+.article-content > table td {
+    padding: 0.5em 0.75em;
+}
+
+/* ==========================================================================
+   7. 文章列表标题：中文行高略微收紧
+   ========================================================================== */
+.article-list .article-title {
+    line-height: 1.45;
 }

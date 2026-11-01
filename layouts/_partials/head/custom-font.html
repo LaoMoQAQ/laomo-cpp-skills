@@ -1,0 +1,10 @@
+{{/*
+  覆盖主题自带的 head/custom-font.html
+  主题原本在这里加载 Google Fonts 的 Lato：
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato...">
+  但本站正文已经换成 PingFang SC / 微软雅黑，Lato 实际用不到，
+  而且 fonts.googleapis.com 在国内基本连不上，会拖慢首屏。
+  这里改为只预加载自托管的 JetBrains Mono（代码块用）。
+*/}}
+<link rel="preload" href="/fonts/jetbrains-mono-latin-400.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/fonts/jetbrains-mono-latin-700.woff2" as="font" type="font/woff2" crossorigin>

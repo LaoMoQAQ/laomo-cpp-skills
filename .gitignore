@@ -1,0 +1,12 @@
+# ---- Hugo 构建产物 ----
+# public/ 是 hugo 生成的，不应该进仓库。
+# Cloudflare 会自己跑 hugo 重新生成，仓库里的旧 public/ 反而会被
+# 一起上传（之前 /cpp/learncpp/ 页面就是这么残留下来、删了源码还在线的）。
+public/
+resources/_gen/
+
+# ---- 本地临时文件 ----
+.hugo_build.lock
+.tmp-shots/
+.DS_Store
+Thumbs.db

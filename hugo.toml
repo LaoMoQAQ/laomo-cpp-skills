@@ -1,7 +1,23 @@
 baseURL = "https://laomo-cpp-skills.laomo-qaq-qaq.workers.dev/"
-languageCode = "zh-CN"
+# 注意：Hugo 0.158 起 languageCode 已弃用，改用 locale。
+# locale 决定 <html lang> 和日期/数字的本地化格式。
+locale = "zh-CN"
 title = "LaoMo's Blog"
 theme = "hugo-theme-stack"
+
+# ------------------------------------------------------------
+# 语言
+# 只写 locale 的话 <html lang> 是 zh-CN，但日期仍然是英文
+# （October 16, 2026），因为 Hugo 靠语言键 "zh" 去找中文月份名。
+# 所以这里显式声明 zh，并用 locale 把 lang 属性修正成 zh-CN。
+# ------------------------------------------------------------
+defaultContentLanguage = "zh"
+
+[languages]
+  [languages.zh]
+    locale = "zh-CN"
+    label = "简体中文"
+    weight = 1
 
 [params]
   mainSections = ["cpp"]
@@ -11,9 +27,45 @@ theme = "hugo-theme-stack"
   [params.article]
     math = true
     toc = false
+  # 侧边栏头像（留空则不显示）。想加就把图片放到 assets/ 下再填相对路径。
+  [params.dateFormat]
+    published = ":date_long"
+    lastUpdated = ":date_long"
 
 [markup]
   [markup.highlight]
     noClasses = false
     style = "dracula"
     lineNos = true
+
+# ============================================================
+# 评论系统
+# ------------------------------------------------------------
+# 现状：主题默认 provider 是 disqus，但本站没配 shortname，
+# 于是每篇文章底部会渲染一个空的灰色卡片（线上确实存在）。
+# 这里先关掉，等配好 Giscus 再打开。
+#
+# 接入 Giscus 的步骤：
+#   1. 仓库 Settings → General → Features 勾选 Discussions（当前是关闭的）
+#   2. 在仓库 Discussions 里新建一个分类，例如 "Comments"（类型选 Announcements）
+#   3. 打开 https://giscus.app ，填仓库名，页面会直接生成 repoID / categoryID
+#   4. 把下面 [params.comments] 的注释去掉，填好四个 ID 字段
+# ============================================================
+[params.comments]
+  enabled = false
+  provider = "giscus"
+
+  # [params.comments.giscus]
+  #   repo             = "LaoMoQAQ/laomo-cpp-skills"
+  #   repoID           = "R_kgDOVMX4EQ"   # 仓库 ID，已从 GitHub API 查到
+  #   category         = "Comments"
+  #   categoryID       = ""               # 去 giscus.app 生成后填这里
+  #   mapping          = "pathname"       # 按路径映射，改标题不会丢评论
+  #   strict           = 0
+  #   reactionsEnabled = 1
+  #   emitMetadata     = 0
+  #   inputPosition    = "top"
+  #   lightTheme       = "light"
+  #   darkTheme        = "dark_dimmed"
+  #   lang             = "zh-CN"
+  #   loading          = "lazy"
