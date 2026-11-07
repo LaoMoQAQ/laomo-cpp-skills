@@ -1,0 +1,9 @@
+# 构建脚本必须在 Linux 下用 LF 换行，否则 bash 会报
+# "$'\r': command not found"。
+# 本机 core.autocrlf=true，不加这条规则提交上去就是 CRLF。
+bin/*.sh   text eol=lf
+
+# 字体是二进制，别让 Git 做任何换行转换
+*.woff2    binary
+*.woff     binary
+*.ico      binary
