@@ -1,38 +1,65 @@
 {{/*
   覆盖主题的 head/style.html
-
-  【为什么需要覆盖】
-  ---------------------------------------------------------------------------
+  ===========================================================================
+  【问题背景】
   主题原本是：
       {{ $style := $sass | toCSS | minify | resources.Fingerprint "sha256" }}
-  toCSS 走 libsass，只有 Hugo extended 版才有。
-  Cloudflare 构建镜像装的是标准版 Hugo（版本号无 +extended），构建会失败：
+  toCSS 走 libsass，只有 Hugo extended 版才内置。
+  Cloudflare 构建镜像装的是「标准版」Hugo（版本号无 +extended），
+  因此构建在编译 assets/scss/style.scss 时失败：
 
       TOCSS: failed to transform "/scss/style.scss" (text/x-scss).
       Check your Hugo installation; you need the extended version to build
       SCSS/SASS with transpiler set to 'libsass'
 
-  【策略：由环境变量决定转译器】
-    HUGO_SASS_TRANSPILER=dartsass  → 用外部 Dart Sass（标准版 Hugo 可用）
-    HUGO_SASS_TRANSPILER=libsass   → 用内置 libsass（extended 版可用）
-    未设置                          → 默认 libsass（保持主题原行为）
+  以前没暴露是因为仓库里误提交了 resources/_gen/ 编译缓存，
+  Hugo 命中缓存就跳过编译。缓存清理后问题立刻出现。
 
-  为什么默认 libsass：
-    这样本地用 extended 版 Hugo 直接 hugo server 就能跑，不需要额外装东西。
-    Cloudflare 上由 bin/build.sh 设置 HUGO_SASS_TRANSPILER=dartsass，
-    并负责安装 Dart Sass，从而绕过标准版 Hugo 没有 libsass 的限制。
+  【这里的做法：三级降级，保证任何环境都能构建】
+  1. libsass    —— extended 版 Hugo 内置，最快
+  2. dartsass   —— 需要构建机上有 sass 命令（bin/build.sh 会装）
+  3. 预编译 CSS —— 前面都不可用时，直接读 static/scss/prebuilt.css
 
-  outputStyle 用 compressed 替代原来的 minify 管道，产物更小且无需二次处理。
+  第 3 级是关键：它让构建在"没有 extended、也没有 Dart Sass"的环境下
+  依然能成功，只是样式用的是仓库里预编译好的那份。
+
+  注意 Hugo 的资源转换是惰性的：css.Sass 本身不报错，
+  真正的错误在访问 .RelPermalink 时才抛出，所以必须用 try 包住 RelPermalink。
+
+  改样式后如果第 3 级被用到，记得重新生成 static/scss/prebuilt.css：
+      bash bin/update-prebuilt.sh
 */}}
 
 {{- $sass := resources.Get "scss/style.scss" -}}
-{{- $transpiler := default "libsass" (getenv "HUGO_SASS_TRANSPILER") -}}
+{{- $style := false -}}
 
-{{- $opts := dict
-    "transpiler" $transpiler
-    "outputStyle" "compressed"
-    "targetPath" "scss/style.css"
--}}
+{{- /* 1. libsass（extended 版 Hugo） */ -}}
+{{- if not $style -}}
+    {{- $cand := css.Sass (dict "transpiler" "libsass" "outputStyle" "compressed") $sass -}}
+    {{- with try $cand.RelPermalink -}}
+        {{- if not .Err -}}{{- $style = $cand -}}{{- end -}}
+    {{- end -}}
+{{- end -}}
 
-{{- $style := $sass | css.Sass $opts | resources.Fingerprint "sha256" -}}
-<link rel="stylesheet" href="{{ $style.RelPermalink }}">
+{{- /* 2. dartsass（标准版 Hugo + 外部 Dart Sass） */ -}}
+{{- if not $style -}}
+    {{- $cand := css.Sass (dict "transpiler" "dartsass" "outputStyle" "compressed") $sass -}}
+    {{- with try $cand.RelPermalink -}}
+        {{- if not .Err -}}{{- $style = $cand -}}{{- end -}}
+    {{- end -}}
+{{- end -}}
+
+{{- if $style -}}
+    {{- $style = $style | resources.Fingerprint "sha256" -}}
+    <link rel="stylesheet" href="{{ $style.RelPermalink }}">
+{{- else -}}
+    {{- /* 3. 预编译 CSS 兜底 */ -}}
+    {{- $prebuilt := resources.Get "scss/prebuilt.css" -}}
+    {{- if $prebuilt -}}
+        {{- warnf "SCSS 无法编译（缺 extended Hugo 或 Dart Sass），回退到 static/scss/prebuilt.css。改样式后请重新生成该文件。" -}}
+        {{- $prebuilt = $prebuilt | resources.Fingerprint "sha256" -}}
+        <link rel="stylesheet" href="{{ $prebuilt.RelPermalink }}">
+    {{- else -}}
+        {{- errorf "SCSS 无法编译，且找不到预编译兜底文件 assets/scss/prebuilt.css" -}}
+    {{- end -}}
+{{- end -}}
