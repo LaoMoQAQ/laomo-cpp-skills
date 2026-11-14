@@ -37,8 +37,9 @@
     --code-font-family: "JetBrains Mono", "Cascadia Code", Consolas, monospace;
 
     /* 代码块统一字号：给 .highlight 定一个基准，里面全部用 em 继承，
-       避免 pre / code / .lnt 一层层 0.9em 叠下去（原来会叠到 10px）。 */
-    --code-font-size: 1.45rem;
+       避免 pre / code / .lnt 一层层 0.9em 叠下去（原来会叠到 10px）。
+       正文 16px 时代码用 14px：等宽字体字面偏宽，比正文略小一点最协调。 */
+    --code-font-size: 1.4rem;
 }
 
 /* ==========================================================================
@@ -138,13 +139,67 @@
    4. 正文排版：字号、行距、留白
    ========================================================================== */
 :root {
-    --article-font-size: 1.65rem;   /* 16.5px，中文正文比较舒服的档位 */
-    --article-line-height: 1.9;     /* 中文行距要比英文松一点 */
+    --article-font-size: 1.55rem;   /* 15.5px，中文正文的舒适区 */
+    --article-line-height: 1.85;
 }
 
 @media (min-width: 768px) {
     :root {
-        --article-font-size: 1.75rem; /* 17.5px */
+        --article-font-size: 1.6rem; /* 16px */
+    }
+}
+
+/* ==========================================================================
+   4.1 页面宽度与留白：别贴着窗口边缘
+   --------------------------------------------------------------------------
+   主题的 grid.scss 里 .container 是：
+       .compact  → md:768  lg:1024  xl:1280
+   视口 1400px 时容器就吃满 1280px，两侧只剩 60px，卡片几乎顶到窗口边。
+   这里把上限压低一档，让正文更窄、两侧更松，中文长行也更好读。
+
+   为什么正文要更窄：
+   中文一行超过约 40 字就难跟行。原来卡片 952px、正文 17.5px，
+   一行能塞 50+ 字，读起来费劲。
+   ========================================================================== */
+.container.compact {
+    @media (min-width: 768px) {
+        max-width: 780px;
+    }
+
+    @media (min-width: 1024px) {
+        max-width: 1000px;
+    }
+
+    @media (min-width: 1280px) {
+        max-width: 1120px;
+    }
+
+    @media (min-width: 1536px) {
+        max-width: 1180px;
+    }
+}
+
+/* 容器左右内边距随屏幕放大，进一步避免贴边 */
+:root {
+    --container-padding: 16px;
+}
+
+@media (min-width: 768px) {
+    :root {
+        --container-padding: 24px;
+    }
+}
+
+@media (min-width: 1280px) {
+    :root {
+        --container-padding: 40px;
+    }
+}
+
+/* 卡片内边距：默认 30px（xl），正文两侧留白略增，读起来更透气 */
+@media (min-width: 1280px) {
+    :root {
+        --card-padding: 36px;
     }
 }
 
@@ -159,14 +214,18 @@
 
 /* 标题：收紧上间距，拉开下间距，层级更清楚 */
 .article-content h2 {
-    margin-top: 2.4em;
-    margin-bottom: 0.8em;
+    margin-top: 2.1em;
+    margin-bottom: 0.7em;
     padding-bottom: 0.35em;
+    /* 主题默认 h2 是 2.4rem（24px），和文章大标题同号，层级拉不开。
+       正文 16px 时 h2 用 20px、h3 用 17px，层次更清楚。 */
+    font-size: 2rem;
 }
 
 .article-content h3 {
-    margin-top: 1.9em;
-    margin-bottom: 0.6em;
+    margin-top: 1.8em;
+    margin-bottom: 0.5em;
+    font-size: 1.7rem;
 }
 
 /* 段落紧跟标题时不要再叠加一个大 margin */
